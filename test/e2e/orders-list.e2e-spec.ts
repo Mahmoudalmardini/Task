@@ -39,13 +39,11 @@ describe('Orders list (e2e)', () => {
     orderModel = app.get<Model<Order>>(getModelToken(Order.name));
     captainModel = app.get<Model<Captain>>(getModelToken(Captain.name));
 
-    // Ensure indexes (including text index) exist on the test DB
-    await orderModel.ensureIndexes();
-    await captainModel.ensureIndexes();
-
-    // Clean up e2e collections before seeding
-    await orderModel.deleteMany({ orderNumber: /^ORD-E2E-/ });
-    await captainModel.deleteMany({ phone: '+962790000001' });
+    // Drop collections entirely so indexes are rebuilt fresh from schema
+    try { await orderModel.collection.drop(); } catch { /* collection may not exist */ }
+    try { await captainModel.collection.drop(); } catch { /* collection may not exist */ }
+    await orderModel.syncIndexes();
+    await captainModel.syncIndexes();
 
     const captain = await captainModel.create({
       name: 'E2E Captain',
@@ -56,56 +54,37 @@ describe('Orders list (e2e)', () => {
     });
     captainId = captain._id;
 
-    const seeds: Array<Partial<Order>> = [
+    const now = Date.now();
+    const seeds: Array<Partial<Order> & { createdAt: Date; updatedAt: Date }> = [
       {
-        orderNumber: 'ORD-E2E-0001',
-        customerName: 'Alice Haddad',
-        customerPhone: '+962799000001',
-        region: 'Amman - Abdali',
-        fullAddress: 'Addr 1',
-        location: { lat: 31.95, lng: 35.91 },
-        status: OrderStatus.CREATED,
-        captainId: null,
+        orderNumber: 'ORD-E2E-0001', customerName: 'Alice Haddad', customerPhone: '+962799000001',
+        region: 'Amman - Abdali', fullAddress: 'Addr 1', location: { lat: 31.95, lng: 35.91 },
+        status: OrderStatus.CREATED, captainId: null,
+        createdAt: new Date(now + 0), updatedAt: new Date(now + 0),
       },
       {
-        orderNumber: 'ORD-E2E-0002',
-        customerName: 'Bob Issa',
-        customerPhone: '+962799000002',
-        region: 'Amman - Abdali',
-        fullAddress: 'Addr 2',
-        location: { lat: 31.95, lng: 35.91 },
-        status: OrderStatus.ASSIGNED,
-        captainId,
+        orderNumber: 'ORD-E2E-0002', customerName: 'Bob Issa', customerPhone: '+962799000002',
+        region: 'Amman - Abdali', fullAddress: 'Addr 2', location: { lat: 31.95, lng: 35.91 },
+        status: OrderStatus.ASSIGNED, captainId,
+        createdAt: new Date(now + 100), updatedAt: new Date(now + 100),
       },
       {
-        orderNumber: 'ORD-E2E-0003',
-        customerName: 'Carla Nimri',
-        customerPhone: '+962799000003',
-        region: 'Zarqa - Downtown',
-        fullAddress: 'Addr 3',
-        location: { lat: 32.07, lng: 36.09 },
-        status: OrderStatus.DELIVERED,
-        captainId,
+        orderNumber: 'ORD-E2E-0003', customerName: 'Carla Nimri', customerPhone: '+962799000003',
+        region: 'Zarqa - Downtown', fullAddress: 'Addr 3', location: { lat: 32.07, lng: 36.09 },
+        status: OrderStatus.DELIVERED, captainId,
+        createdAt: new Date(now + 200), updatedAt: new Date(now + 200),
       },
       {
-        orderNumber: 'ORD-E2E-0004',
-        customerName: 'Dana Hijazi',
-        customerPhone: '+962799000004',
-        region: 'Amman - Sweifieh',
-        fullAddress: 'Addr 4',
-        location: { lat: 31.95, lng: 35.85 },
-        status: OrderStatus.CANCELLED,
-        captainId: null,
+        orderNumber: 'ORD-E2E-0004', customerName: 'Dana Hijazi', customerPhone: '+962799000004',
+        region: 'Amman - Sweifieh', fullAddress: 'Addr 4', location: { lat: 31.95, lng: 35.85 },
+        status: OrderStatus.CANCELLED, captainId: null,
+        createdAt: new Date(now + 300), updatedAt: new Date(now + 300),
       },
       {
-        orderNumber: 'ORD-E2E-0005',
-        customerName: 'Eli Khoury',
-        customerPhone: '+962799000005',
-        region: 'Amman - Abdali',
-        fullAddress: 'Addr 5',
-        location: { lat: 31.95, lng: 35.91 },
-        status: OrderStatus.CREATED,
-        captainId: null,
+        orderNumber: 'ORD-E2E-0005', customerName: 'Eli Khoury', customerPhone: '+962799000005',
+        region: 'Amman - Abdali', fullAddress: 'Addr 5', location: { lat: 31.95, lng: 35.91 },
+        status: OrderStatus.CREATED, captainId: null,
+        createdAt: new Date(now + 400), updatedAt: new Date(now + 400),
       },
     ];
     await orderModel.insertMany(seeds);

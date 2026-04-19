@@ -20,7 +20,7 @@ COPY tsconfig*.json nest-cli.json ./
 COPY src ./src
 COPY test ./test
 
-CMD ["sh", "-c", "npm test -- --forceExit && npm run test:e2e -- --forceExit"]
+CMD ["sh", "-c", "npm test -- --forceExit && npm run test:e2e -- --forceExit --runInBand"]
 
 # ────────── Stage 3: runtime ──────────
 FROM node:20-alpine AS runtime

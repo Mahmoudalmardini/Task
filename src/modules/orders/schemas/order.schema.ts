@@ -41,8 +41,8 @@ export class Order {
   @Prop({ type: Types.ObjectId, ref: 'Captain', default: null })
   captainId!: Types.ObjectId | null;
 
-  @Prop({ type: String, default: null })
-  externalReference!: string | null;
+  @Prop({ type: String })
+  externalReference?: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
