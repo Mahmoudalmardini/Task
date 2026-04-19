@@ -1,0 +1,215 @@
+{
+  "info": {
+    "name": "Delivery Operations API",
+    "description": "Admin + Partner + Reports endpoints for the Delivery Operations backend. Set the `baseUrl`, `adminToken`, and `partnerApiKey` variables before running requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "adminToken", "value": "" },
+    { "key": "partnerApiKey", "value": "" },
+    { "key": "captainId", "value": "" },
+    { "key": "orderId", "value": "" },
+    { "key": "previousFrom", "value": "" },
+    { "key": "previousTo", "value": "" },
+    { "key": "currentFrom", "value": "" },
+    { "key": "currentTo", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Captains",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/captains",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ali Mansour\",\n  \"phone\": \"+962799999001\",\n  \"vehicleType\": \"motorcycle\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List (with filters)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/captains?status=active&page=1&limit=20"
+          }
+        },
+        {
+          "name": "Get by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/captains/{{captainId}}"
+          }
+        },
+        {
+          "name": "Deactivate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/captains/{{captainId}}/deactivate"
+          }
+        },
+        {
+          "name": "Activate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/captains/{{captainId}}/activate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderNumber\": \"ORD-DEMO-0001\",\n  \"customerName\": \"Layla Hassan\",\n  \"customerPhone\": \"+962790000000\",\n  \"region\": \"Amman - Abdali\",\n  \"fullAddress\": \"Building 14, 3rd floor\",\n  \"location\": { \"lat\": 31.9539, \"lng\": 35.9106 }\n}"
+            }
+          }
+        },
+        {
+          "name": "List (advanced filter+search+sort+paginate)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/orders?status=created&region=Amman%20-%20Abdali&sortBy=createdAt&sortOrder=desc&page=1&limit=20"
+          }
+        },
+        {
+          "name": "List — text search",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/orders?q=SEED-LIVE"
+          }
+        },
+        {
+          "name": "Get by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/orders/{{orderId}}"
+          }
+        },
+        {
+          "name": "Assign",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/orders/{{orderId}}/assign",
+            "body": { "mode": "raw", "raw": "{ \"captainId\": \"{{captainId}}\" }" }
+          }
+        },
+        {
+          "name": "Unassign",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/orders/{{orderId}}/unassign"
+          }
+        },
+        {
+          "name": "Update status (pick up)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/orders/{{orderId}}/status",
+            "body": { "mode": "raw", "raw": "{ \"status\": \"picked_up\" }" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Partner",
+      "item": [
+        {
+          "name": "Create order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-API-Key", "value": "{{partnerApiKey}}" },
+              { "key": "Idempotency-Key", "value": "550e8400-e29b-41d4-a716-446655440000" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/partner/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Sara Ahmad\",\n  \"customerPhone\": \"+962799999999\",\n  \"region\": \"Amman - Sweifieh\",\n  \"fullAddress\": \"Al-Wakalat Street, near Cozmo, Amman\",\n  \"location\": { \"lat\": 31.9539, \"lng\": 35.85 },\n  \"externalReference\": \"PARTNER-REF-DEMO-0001\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Replay idempotency key (should return cached response)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-API-Key", "value": "{{partnerApiKey}}" },
+              { "key": "Idempotency-Key", "value": "550e8400-e29b-41d4-a716-446655440000" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": "{{baseUrl}}/partner/orders",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Sara Ahmad\",\n  \"customerPhone\": \"+962799999999\",\n  \"region\": \"Amman - Sweifieh\",\n  \"fullAddress\": \"Al-Wakalat Street, near Cozmo, Amman\",\n  \"location\": { \"lat\": 31.9539, \"lng\": 35.85 },\n  \"externalReference\": \"PARTNER-REF-DEMO-0001\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Order volume drop",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/reports/captains/order-volume-drop?previousFrom={{previousFrom}}&previousTo={{previousTo}}&currentFrom={{currentFrom}}&currentTo={{currentTo}}&minPreviousOrders=1&minDropPercentage=0&sortBy=dropPercentage&sortOrder=desc&page=1&limit=10"
+          }
+        }
+      ]
+    }
+  ]
+}

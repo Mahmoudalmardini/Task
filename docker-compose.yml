@@ -1,0 +1,67 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: delivery-ops-mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: delivery-ops-app
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGO_URI: mongodb://mongo:27017/delivery_ops
+      JWT_SECRET: ${JWT_SECRET:-docker-secret-replace-me-please}
+      JWT_EXPIRES_IN: 24h
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin@123}
+      PARTNER_RATE_LIMIT_TTL_SECONDS: 60
+      PARTNER_RATE_LIMIT_MAX: 60
+      IDEMPOTENCY_TTL_HOURS: 24
+    ports:
+      - '3000:3000'
+
+  test:
+    build:
+      context: .
+      target: tester
+    container_name: delivery-ops-test
+    environment:
+      NODE_ENV: test
+      JWT_SECRET: test-secret-for-jest
+      MONGO_URI: mongodb://mongo:27017/delivery_ops_test
+    depends_on:
+      mongo:
+        condition: service_healthy
+    profiles:
+      - test
+    restart: 'no'
+
+  seed:
+    build: .
+    container_name: delivery-ops-seed
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://mongo:27017/delivery_ops
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-Admin@123}
+    command: ["node", "dist/seed/seed.js"]
+    restart: 'no'
+
+volumes:
+  mongo_data:
